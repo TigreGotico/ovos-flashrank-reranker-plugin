@@ -60,10 +60,6 @@ Example configuration:
 
 The following models are available for use with the `FlashRankMultipleChoiceSolver`:
 
-## Available Models
-
-The following models are available for use with the `FlashRankMultipleChoiceSolver`:
-
 | Model Name                   | Description                                                                                                   |
 |------------------------------|---------------------------------------------------------------------------------------------------------------|
 | ms-marco-TinyBERT-L-2-v2     | (default) [Model card](https://www.modelcards.com/ms-marco-TinyBERT-L-2-v2)                                     |
