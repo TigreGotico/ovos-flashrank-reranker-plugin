@@ -10,7 +10,7 @@ The `FlashRankMultipleChoiceSolver` plugin is designed for the Open Voice OS (OV
 
 ### Important Note on FlashRank and Llama-CPP Compatibility
 
-Installing FlashRank can lead to a downgrade of the `llama-cpp-python` version, which is critical for GPU support and performance, especially for [ovos-solver-gguf-plugin](https://github.com/TigreGotico/ovos-solver-gguf-plugin). 
+Installing FlashRank can lead to a downgrade of the `llama-cpp-python` version, which is critical for GPU support and performance, especially for large language models (LLMs). This issue is tracked in [FlashRank's GitHub repository](https://github.com/PrithivirajDamodaran/FlashRank/issues/29).
 
 **Workaround for GPU Support with `llama-cpp-python`:**
 
@@ -19,7 +19,7 @@ If you need GPU support with `llama-cpp-python`, you might need to reinstall it 
 CMAKE_ARGS="-DGGML_CUDA=on" FORCE_CMAKE=1 pip install llama-cpp-python --force-reinstall --no-cache-dir
 ```
 
-Be aware that installing FlashRank may undo these custom installations. This issue is tracked in [FlashRank's GitHub repository](https://github.com/PrithivirajDamodaran/FlashRank/issues/29).
+Be aware that installing FlashRank may undo these custom installations
 
 ## Usage
 
@@ -55,6 +55,10 @@ Example configuration:
     "model": "desired-model-name"
 }
 ```
+
+## Available Models
+
+The following models are available for use with the `FlashRankMultipleChoiceSolver`:
 
 ## Available Models
 
