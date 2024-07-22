@@ -113,7 +113,7 @@ Below is the list of models supported as of now:
 ## Important Note on FlashRank and Llama-CPP Compatibility
 
 Installing FlashRank can lead to a downgrade of the `llama-cpp-python` version, which is critical for GPU support and
-performance, especially for large language models (LLMs). This issue is tracked
+performance, especially when using [ovos-solver-gguf-plugin](https://github.com/TigreGotico/ovos-solver-gguf-plugin). This issue is tracked
 in [FlashRank's GitHub repository](https://github.com/PrithivirajDamodaran/FlashRank/issues/29).
 
 **Workaround for GPU Support with `llama-cpp-python`:**
@@ -125,4 +125,4 @@ CMake arguments:
 CMAKE_ARGS="-DGGML_CUDA=on" FORCE_CMAKE=1 pip install llama-cpp-python --force-reinstall --no-cache-dir
 ```
 
-Be aware that installing FlashRank may undo these custom installations
+Be aware that updating FlashRank may undo these custom installations
