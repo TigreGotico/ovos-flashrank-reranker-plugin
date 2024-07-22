@@ -99,7 +99,7 @@ automated research assistants or content summarizers.
 
 ## Available Models
 
-Below is the list of models supported as of now:
+Below is the list of models supported as of now, by default `ms-marco-MultiBERT-L-12` is used due to being multilingual:
 
 | Model Name                                       | Description                                                                                                                                                                                                                                                                                                                                                                    |
 |--------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

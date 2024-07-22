@@ -12,7 +12,7 @@ class FlashRankMultipleChoiceSolver(MultipleChoiceSolver):
     def __init__(self, config=None):
         config = config or {"min_conf": None,
                             "n_answer": 1,
-                            "model": "ms-marco-TinyBERT-L-2-v2"}
+                            "model": "ms-marco-MultiBERT-L-12"}
         super().__init__(config)
 
     # plugin methods to override
@@ -21,7 +21,7 @@ class FlashRankMultipleChoiceSolver(MultipleChoiceSolver):
         """
         rank options list, returning a list of tuples (score, text)
         """
-        ranker = Ranker(model_name=self.config.get("model", "ms-marco-TinyBERT-L-2-v2"))
+        ranker = Ranker(model_name=self.config.get("model", "ms-marco-MultiBERT-L-12"))
         passages = [
             {"text": o}
             for o in options
@@ -37,7 +37,7 @@ class FlashRankEvidenceSolverPlugin(EvidenceSolver):
     def __init__(self, config=None):
         config = config or {"min_conf": None,
                             "n_answer": 1,
-                            "model": "ms-marco-TinyBERT-L-2-v2"}
+                            "model": "ms-marco-MultiBERT-L-12"}
         super().__init__(config)
         self.ranker = FlashRankMultipleChoiceSolver(self.config)
 
@@ -60,7 +60,7 @@ class FlashRankCorpusSolver(QuestionSolver):
     def __init__(self, config=None):
         config = config or {"min_conf": None,
                             "n_answer": 1,
-                            "model": "ms-marco-TinyBERT-L-2-v2"}
+                            "model": "ms-marco-MultiBERT-L-12"}
         super().__init__(config)
         self.corpus = None
         self.ranker = FlashRankMultipleChoiceSolver(self.config)
