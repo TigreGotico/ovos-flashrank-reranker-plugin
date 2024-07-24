@@ -1,4 +1,2 @@
 ovos-plugin-manager
-# TODO - flashrank might downgrade existing llama-cpp-python versions!
-# see https://github.com/PrithivirajDamodaran/FlashRank/issues/29
-flashrank
+flashrank>=0.2.8

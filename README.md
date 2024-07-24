@@ -109,20 +109,3 @@ Below is the list of models supported as of now, by default `ms-marco-MultiBERT-
 | `ce-esci-MiniLM-L12-v2`                          | [FT on Amazon ESCI dataset](https://github.com/amazon-science/esci-data) Fine-tuned on the Amazon ESCI dataset, which includes queries in English, Japanese, and Spanish. Designed for semantic search and ranking, this model maps sentences and paragraphs to a 384-dimensional vector space, useful for tasks like clustering and product search in a multilingual context. |
 | `rank-T5-flan` (Best non cross-encoder reranker) | [Model card](https://huggingface.co/bergum/rank-T5-flan)                                                                                                                                                                                                                                                                                                                       |
 | `rank_zephyr_7b_v1_full` (4-bit-quantised GGUF)  | A 7B parameter GPT-like model fine-tuned on task-specific listwise reranking data. It is the state-of-the-art open-source reranking model for several datasets                                                                                                                                                                                                                 |
-
-## Important Note on FlashRank and Llama-CPP Compatibility
-
-Installing FlashRank can lead to a downgrade of the `llama-cpp-python` version, which is critical for GPU support and
-performance, especially when using [ovos-solver-gguf-plugin](https://github.com/TigreGotico/ovos-solver-gguf-plugin). This issue is tracked
-in [FlashRank's GitHub repository](https://github.com/PrithivirajDamodaran/FlashRank/issues/29).
-
-**Workaround for GPU Support with `llama-cpp-python`:**
-
-If you need GPU support with `llama-cpp-python`, you might need to reinstall it after installing flashrank with specific
-CMake arguments:
-
-```bash
-CMAKE_ARGS="-DGGML_CUDA=on" FORCE_CMAKE=1 pip install llama-cpp-python --force-reinstall --no-cache-dir
-```
-
-Be aware that updating FlashRank may undo these custom installations
