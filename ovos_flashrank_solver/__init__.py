@@ -16,8 +16,7 @@ class FlashRankMultipleChoiceSolver(MultipleChoiceSolver):
         super().__init__(config)
 
     # plugin methods to override
-    def rerank(self, query: str, options: List[str],
-               context: Optional[dict] = None) -> List[Tuple[float, str]]:
+    def rerank(self, query: str, options: List[str], lang: Optional[str] = None) -> List[Tuple[float, str]]:
         """
         rank options list, returning a list of tuples (score, text)
         """
