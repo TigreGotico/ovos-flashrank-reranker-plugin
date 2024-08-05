@@ -10,8 +10,6 @@ multiple-choice answers based on their relevance to the given query.
 - **Customizable Model**: Allows the use of different ranking models.
 - **Seamless Integration**: Designed to work with OVOS plugin manager.
 
-### ReRanking
-
 ReRanking is a technique used to refine a list of potential answers by evaluating their relevance to a given query.
 This process is crucial in scenarios where multiple options or responses need to be assessed to determine the most
 appropriate one.
@@ -19,8 +17,35 @@ appropriate one.
 In retrieval chatbots, ReRanking helps in selecting the best answer from a set of retrieved documents or options,
 enhancing the accuracy of the response provided to the user.
 
+## Configuration
+
 `MultipleChoiceSolver` are integrated into the OVOS Common Query framework, where they are used to select the most
 relevant answer from a set of multiple skill responses.
+
+```json
+"common_query": {
+  "reranker": "ovos-flashrank-reranker-plugin",
+  "ignore_skill_scores": true,
+  "ovos-flashrank-reranker-plugin": {"model": "ms-marco-TinyBERT-L-2-v2"}
+}
+```
+
+> NOTE: enabling this on a raspberry pi will introduce up to 1 second of extra latency in common query pipeline
+
+### Available Models
+
+Below is the list of models supported as of now, by default `ms-marco-MultiBERT-L-12` is used due to being multilingual:
+
+| Model Name                                       | Description                                                                                                                                                                                                                                                                                                                                                                    |
+|--------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ms-marco-TinyBERT-L-2-v2`             | [Model card](https://huggingface.co/cross-encoder/ms-marco-TinyBERT-L-2) Trained on the MS Marco Passage Ranking task. This model encodes queries and ranks passages retrieved from large-scale datasets like MS MARCO, focusing on machine reading comprehension and passage ranking.                                                                                         |
+| `ms-marco-MiniLM-L-12-v2`                        | [Model card](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-12-v2) Trained on MS MARCO Passage Ranking, it performs well for Information Retrieval tasks, encoding queries and sorting passages. It offers high performance with a lower documents per second rate compared to other versions.                                                                         |
+| `ms-marco-MultiBERT-L-12` (default)                        | Multi-lingual, [supports 100+ languages](https://github.com/google-research/bert/blob/master/multilingual.md#list-of-languages)                                                                                                                                                                                                                                                |
+| `ce-esci-MiniLM-L12-v2`                          | [FT on Amazon ESCI dataset](https://github.com/amazon-science/esci-data) Fine-tuned on the Amazon ESCI dataset, which includes queries in English, Japanese, and Spanish. Designed for semantic search and ranking, this model maps sentences and paragraphs to a 384-dimensional vector space, useful for tasks like clustering and product search in a multilingual context. |
+| `rank-T5-flan` | [Model card](https://huggingface.co/bergum/rank-T5-flan) Best non cross-encoder reranker                                                                                                                                                                                                                                                                                                                       |
+| `rank_zephyr_7b_v1_full` (4-bit-quantised GGUF)  | A 7B parameter GPT-like model fine-tuned on task-specific listwise reranking data. It is the state-of-the-art open-source reranking model for several datasets                                                                                                                                                                                                                 |
+
+## Standalone Usage
 
 #### FlashRankMultipleChoiceSolver
 
@@ -96,16 +121,3 @@ In this example, `FlashRankEvidenceSolverPlugin` effectively identifies and retr
 the provided text that answers the query about the number of rovers exploring Mars.
 This capability is essential for applications requiring information extraction from extensive textual content, such as
 automated research assistants or content summarizers.
-
-## Available Models
-
-Below is the list of models supported as of now, by default `ms-marco-MultiBERT-L-12` is used due to being multilingual:
-
-| Model Name                                       | Description                                                                                                                                                                                                                                                                                                                                                                    |
-|--------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ms-marco-TinyBERT-L-2-v2` (default)             | [Model card](https://huggingface.co/cross-encoder/ms-marco-TinyBERT-L-2) Trained on the MS Marco Passage Ranking task. This model encodes queries and ranks passages retrieved from large-scale datasets like MS MARCO, focusing on machine reading comprehension and passage ranking.                                                                                         |
-| `ms-marco-MiniLM-L-12-v2`                        | [Model card](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-12-v2) Trained on MS MARCO Passage Ranking, it performs well for Information Retrieval tasks, encoding queries and sorting passages. It offers high performance with a lower documents per second rate compared to other versions.                                                                         |
-| `ms-marco-MultiBERT-L-12`                        | Multi-lingual, [supports 100+ languages](https://github.com/google-research/bert/blob/master/multilingual.md#list-of-languages)                                                                                                                                                                                                                                                |
-| `ce-esci-MiniLM-L12-v2`                          | [FT on Amazon ESCI dataset](https://github.com/amazon-science/esci-data) Fine-tuned on the Amazon ESCI dataset, which includes queries in English, Japanese, and Spanish. Designed for semantic search and ranking, this model maps sentences and paragraphs to a 384-dimensional vector space, useful for tasks like clustering and product search in a multilingual context. |
-| `rank-T5-flan` (Best non cross-encoder reranker) | [Model card](https://huggingface.co/bergum/rank-T5-flan)                                                                                                                                                                                                                                                                                                                       |
-| `rank_zephyr_7b_v1_full` (4-bit-quantised GGUF)  | A 7B parameter GPT-like model fine-tuned on task-specific listwise reranking data. It is the state-of-the-art open-source reranking model for several datasets                                                                                                                                                                                                                 |
