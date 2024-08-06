@@ -3,7 +3,7 @@ from typing import Optional, List, Tuple, Dict, Iterable, Union
 from flashrank import Ranker, RerankRequest
 from ovos_plugin_manager.templates.solvers import TldrSolver, MultipleChoiceSolver, QuestionSolver, EvidenceSolver
 from ovos_utils.log import LOG
-from quebra_frases import sentence_tokenize
+from quebra_frases import sentence_tokenize, paragraph_tokenize
 
 
 class FlashRankMultipleChoiceSolver(MultipleChoiceSolver):
@@ -117,17 +117,33 @@ class FlashRankSummarizer(TldrSolver):
         :param lang: Optional language code.
         :return: A summary of the provided document.
         """
-        sents = []
-        for s in document.split("\n"):
-            sents += sentence_tokenize(s)
-        sents = [s.strip() for s in sents if s]
+        strategy = self.config.get("strategy", "multi")
         n = self.config.get("max_sentences", 3)
-        if self.config.get("keep_first"):
-            s = sents.pop(0)
+        if strategy == "multi":
+            sents = []
+            for s in document.split("\n"):
+                sents += paragraph_tokenize(s)
+            top_k = [s[1] for s in self.ranker.rerank(document,
+                                                      [s.strip() for s in sents if s],
+                                                      lang=lang)]
+            sents = []
+            for p in top_k[:3]:
+                sents += sentence_tokenize(p)
             top_k = [s[1] for s in self.ranker.rerank(document, sents, lang=lang)]
-            top_k.insert(0, s)
+        elif strategy == "paragraphs":
+            sents = []
+            for s in document.split("\n"):
+                sents += paragraph_tokenize(s)
+            top_k = [s[1] for s in self.ranker.rerank(document,
+                                                      [s.strip() for s in sents if s],
+                                                      lang=lang)]
         else:
-            top_k = [s[1] for s in self.ranker.rerank(document, sents, lang=lang)]
+            sents = []
+            for s in document.split("\n"):
+                sents += sentence_tokenize(s)
+            top_k = [s[1] for s in self.ranker.rerank(document,
+                                                      [s.strip() for s in sents if s],
+                                                      lang=lang)]
         return "\n".join(top_k[:n])
 
 
@@ -141,6 +157,17 @@ if __name__ == "__main__":
     In addition to the moons and asteroids of the solar system, there are also other potential locations for the search for alien life. For example, there are exoplanets, or planets outside of our solar system, that have been discovered in recent years. Some of these exoplanets are believed to be in the habitable zone, which means they are located in the right distance from their star to potentially have liquid water on their surface.
     Despite the potential for alien life in the solar system, there are still many uncertainties and unknowns. The search for extraterrestrial life is a complex and multifaceted endeavor that requires a combination of scientific research, technological advancements, and exploration. While there is still no concrete evidence of life beyond Earth, the search for alien life continues to be a fascinating and exciting endeavor that holds the potential for groundbreaking discoveries in the future."""
 
+    s.config["strategy"] = "multi"
+    print(s.get_tldr(query))
+    # Some of these exoplanets are believed to be in the habitable zone, which means they are located in the right distance from their star to potentially have liquid water on their surface.
+    # In addition to the moons and asteroids of the solar system, there are also other potential locations for the search for alien life.
+    # Despite the potential for alien life in the solar system, there are still many uncertainties and unknowns.
+    s.config["strategy"] = "paragraphs"
+    print(s.get_tldr(query))
+    # Another area of interest for the search for alien life is the asteroid belt between Mars and Jupiter. This region is home to millions of asteroids, some of which may have the right conditions for life to exist. For example, some asteroids have been found to have water and organic compounds, which are essential for life.
+    # Despite the potential for alien life in the solar system, there are still many uncertainties and unknowns. The search for extraterrestrial life is a complex and multifaceted endeavor that requires a combination of scientific research, technological advancements, and exploration. While there is still no concrete evidence of life beyond Earth, the search for alien life continues to be a fascinating and exciting endeavor that holds the potential for groundbreaking discoveries in the future.
+    # In addition to the moons and asteroids of the solar system, there are also other potential locations for the search for alien life. For example, there are exoplanets, or planets outside of our solar system, that have been discovered in recent years. Some of these exoplanets are believed to be in the habitable zone, which means they are located in the right distance from their star to potentially have liquid water on their surface.
+    s.config["strategy"] = "sentences"
     print(s.get_tldr(query))
     # This region is home to millions of asteroids, some of which may have the right conditions for life to exist.
     # Some of these exoplanets are believed to be in the habitable zone, which means they are located in the right distance from their star to potentially have liquid water on their surface.
