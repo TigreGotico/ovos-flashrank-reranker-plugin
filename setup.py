@@ -49,6 +49,9 @@ PLUGIN_ENTRY_POINT = [
     'ovos-flashrank-reranker-plugin=ovos_flashrank_solver:FlashRankMultipleChoiceSolver'
 ]
 EVIDENCE_ENTRY_POINT = 'ovos-evidence-solver-flashrank=ovos_flashrank_solver:BM25SolverPlugin'
+SUMMARIZER_ENTRY_POINT = (
+    'ovos-summarizer-solver-flashrank=ovos_flashrank_solver:FlashRankSummarizer'
+)
 
 setup(
     name='ovos-flashrank-reranker-plugin',
@@ -63,6 +66,7 @@ setup(
     keywords='OVOS openvoiceos plugin utterance fallback query',
     entry_points={
         "opm.solver.reading_comprehension": EVIDENCE_ENTRY_POINT,
+        'opm.solver.summarization': SUMMARIZER_ENTRY_POINT,
         "opm.solver.multiple_choice": PLUGIN_ENTRY_POINT},
     install_requires=required("requirements.txt"),
     long_description=long_desc,

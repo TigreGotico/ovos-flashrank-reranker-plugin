@@ -1,9 +1,9 @@
-from typing import Optional, List, Tuple, Dict, Iterable
+from typing import Optional, List, Tuple, Dict, Iterable, Union
 
 from flashrank import Ranker, RerankRequest
-from ovos_plugin_manager.templates.solvers import MultipleChoiceSolver, QuestionSolver, EvidenceSolver
+from ovos_plugin_manager.templates.solvers import TldrSolver, MultipleChoiceSolver, QuestionSolver, EvidenceSolver
 from ovos_utils.log import LOG
-from quebra_frases import sentence_tokenize
+from quebra_frases import sentence_tokenize, paragraph_tokenize
 
 
 class FlashRankMultipleChoiceSolver(MultipleChoiceSolver):
@@ -14,19 +14,22 @@ class FlashRankMultipleChoiceSolver(MultipleChoiceSolver):
                             "n_answer": 1,
                             "model": "ms-marco-MultiBERT-L-12"}
         super().__init__(config)
+        self.ranker = Ranker(model_name=self.config.get("model", "ms-marco-MultiBERT-L-12"))
 
-    # plugin methods to override
-    def rerank(self, query: str, options: List[str], lang: Optional[str] = None) -> List[Tuple[float, str]]:
+    def rerank(self, query: str, options: List[str],
+               lang: Optional[str] = None,
+               return_index: bool = False) -> List[Tuple[float, Union[str, int]]]:
         """
         rank options list, returning a list of tuples (score, text)
         """
-        ranker = Ranker(model_name=self.config.get("model", "ms-marco-MultiBERT-L-12"))
         passages = [
             {"text": o}
             for o in options
         ]
         rerankrequest = RerankRequest(query=query, passages=passages)
-        results = ranker.rerank(rerankrequest)
+        results = self.ranker.rerank(rerankrequest)
+        if return_index:
+            return [(r["score"], options.index(r["text"])) for r in results]
         return [(r["score"], r["text"]) for r in results]
 
 
@@ -40,7 +43,8 @@ class FlashRankEvidenceSolverPlugin(EvidenceSolver):
         super().__init__(config)
         self.ranker = FlashRankMultipleChoiceSolver(self.config)
 
-    def get_best_passage(self, evidence, question, context=None):
+    def get_best_passage(self, evidence, question,
+                         lang: Optional[str] = None):
         """
         evidence and question assured to be in self.default_lang
          returns summary of provided document
@@ -49,7 +53,7 @@ class FlashRankEvidenceSolverPlugin(EvidenceSolver):
         for s in evidence.split("\n"):
             sents += sentence_tokenize(s)
         sents = [s.strip() for s in sents if s]
-        return self.ranker.select_answer(question, sents, context)
+        return self.ranker.select_answer(question, sents, lang=lang)
 
 
 class FlashRankCorpusSolver(QuestionSolver):
@@ -94,8 +98,81 @@ class FlashRankQACorpusSolver(FlashRankCorpusSolver):
             yield score, self.answers[q]
 
 
+class FlashRankSummarizer(TldrSolver):
+    """summarize text using flashrank"""
+
+    def __init__(self, config=None):
+        config = config or {"min_conf": None,
+                            "n_answer": 1,
+                            "model": "ms-marco-MultiBERT-L-12"}
+        super().__init__(config)
+        self.ranker = FlashRankMultipleChoiceSolver(self.config)
+
+    def get_tldr(self, document: str,
+                 lang: Optional[str] = None) -> str:
+        """
+        Summarize the provided document.
+
+        :param document: The text of the document to summarize, assured to be in the default language.
+        :param lang: Optional language code.
+        :return: A summary of the provided document.
+        """
+        strategy = self.config.get("strategy", "multi")
+        n = self.config.get("max_sentences", 3)
+        if strategy == "multi":
+            sents = []
+            for s in document.split("\n"):
+                sents += paragraph_tokenize(s)
+            top_k = [s[1] for s in self.ranker.rerank(document,
+                                                      [s.strip() for s in sents if s],
+                                                      lang=lang)]
+            sents = []
+            for p in top_k[:3]:
+                sents += sentence_tokenize(p)
+            top_k = [s[1] for s in self.ranker.rerank(document, sents, lang=lang)]
+        elif strategy == "paragraphs":
+            sents = []
+            for s in document.split("\n"):
+                sents += paragraph_tokenize(s)
+            top_k = [s[1] for s in self.ranker.rerank(document,
+                                                      [s.strip() for s in sents if s],
+                                                      lang=lang)]
+        else:
+            sents = []
+            for s in document.split("\n"):
+                sents += sentence_tokenize(s)
+            top_k = [s[1] for s in self.ranker.rerank(document,
+                                                      [s.strip() for s in sents if s],
+                                                      lang=lang)]
+        return "\n".join(top_k[:n])
+
+
 if __name__ == "__main__":
     LOG.set_level("DEBUG")
+    s = FlashRankSummarizer()
+
+    query = """The possibility of alien life in the solar system has been a topic of interest for scientists and astronomers for many years. The search for extraterrestrial life has been a major focus of space exploration, with numerous missions and discoveries made in recent years. While there is still no concrete evidence of life beyond Earth, the search for alien life continues to be a fascinating and exciting endeavor.
+    One of the most promising areas for the search for alien life is the moons of Jupiter and Saturn. These moons, such as Europa and Enceladus, are believed to have subsurface oceans that could potentially harbor life. The presence of water, a key ingredient for life as we know it, has been detected on these moons, and there are also indications of other necessary elements such as carbon, nitrogen, and oxygen.
+    Another area of interest for the search for alien life is the asteroid belt between Mars and Jupiter. This region is home to millions of asteroids, some of which may have the right conditions for life to exist. For example, some asteroids have been found to have water and organic compounds, which are essential for life.
+    In addition to the moons and asteroids of the solar system, there are also other potential locations for the search for alien life. For example, there are exoplanets, or planets outside of our solar system, that have been discovered in recent years. Some of these exoplanets are believed to be in the habitable zone, which means they are located in the right distance from their star to potentially have liquid water on their surface.
+    Despite the potential for alien life in the solar system, there are still many uncertainties and unknowns. The search for extraterrestrial life is a complex and multifaceted endeavor that requires a combination of scientific research, technological advancements, and exploration. While there is still no concrete evidence of life beyond Earth, the search for alien life continues to be a fascinating and exciting endeavor that holds the potential for groundbreaking discoveries in the future."""
+
+    s.config["strategy"] = "multi"
+    print(s.get_tldr(query))
+    # Some of these exoplanets are believed to be in the habitable zone, which means they are located in the right distance from their star to potentially have liquid water on their surface.
+    # In addition to the moons and asteroids of the solar system, there are also other potential locations for the search for alien life.
+    # Despite the potential for alien life in the solar system, there are still many uncertainties and unknowns.
+    s.config["strategy"] = "paragraphs"
+    print(s.get_tldr(query))
+    # Another area of interest for the search for alien life is the asteroid belt between Mars and Jupiter. This region is home to millions of asteroids, some of which may have the right conditions for life to exist. For example, some asteroids have been found to have water and organic compounds, which are essential for life.
+    # Despite the potential for alien life in the solar system, there are still many uncertainties and unknowns. The search for extraterrestrial life is a complex and multifaceted endeavor that requires a combination of scientific research, technological advancements, and exploration. While there is still no concrete evidence of life beyond Earth, the search for alien life continues to be a fascinating and exciting endeavor that holds the potential for groundbreaking discoveries in the future.
+    # In addition to the moons and asteroids of the solar system, there are also other potential locations for the search for alien life. For example, there are exoplanets, or planets outside of our solar system, that have been discovered in recent years. Some of these exoplanets are believed to be in the habitable zone, which means they are located in the right distance from their star to potentially have liquid water on their surface.
+    s.config["strategy"] = "sentences"
+    print(s.get_tldr(query))
+    # This region is home to millions of asteroids, some of which may have the right conditions for life to exist.
+    # Some of these exoplanets are believed to be in the habitable zone, which means they are located in the right distance from their star to potentially have liquid water on their surface.
+    # The presence of water, a key ingredient for life as we know it, has been detected on these moons, and there are also indications of other necessary elements such as carbon, nitrogen, and oxygen.
+
     p = FlashRankMultipleChoiceSolver()
     a = p.rerank("what is the speed of light", [
         "very fast", "10m/s", "the speed of light is C"
