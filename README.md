@@ -1,4 +1,6 @@
-# FlashRankMultipleChoiceSolver for OVOS
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/TigreGotico/ovos-flashrank-reranker-plugin)
+
+# FlashRankReranker OVOS Plugin
 
 The `FlashRankMultipleChoiceSolver` plugin is designed for the Open Voice OS (OVOS) platform to help select the best
 answer to a question from a list of options. This plugin utilizes the FlashRank library to evaluate and rank
